@@ -8,13 +8,10 @@ import "@openzeppelin/contracts/utils/Context.sol";
 
 contract QBMToken is Context, AccessControlEnumerable, ERC20Burnable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     constructor() ERC20("Quebim Token", "QBM") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
         _setupRole(MINTER_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
 
         _mint(msg.sender, 1 ether);
     }

@@ -1,17 +1,18 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
-const Contract = "QBMToken";
+const Contract = "TokenFarm";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployments, getNamedAccounts } = hre;
     const { deploy } = deployments;
-
     const { deployer } = await getNamedAccounts();
+
+    var qbmToken = await deployments.get("QBMToken");
 
     await deploy(Contract, {
         from: deployer,
-        args: [],
+        args: [qbmToken.address],
         log: true,
         autoMine: true, // speed up deployment on local network (ganache, hardhat), no effect on live networks
     });
