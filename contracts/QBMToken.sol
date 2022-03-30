@@ -12,12 +12,10 @@ contract QBMToken is Context, AccessControlEnumerable, ERC20Burnable {
     constructor() ERC20("QBM Token", "QBM") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
-
-        _mint(msg.sender, 1 ether);
     }
 
     function mint(address to, uint256 amount) public virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()),"QBMToken: Only minter can mint");
+        require(hasRole(MINTER_ROLE, _msgSender()),"QBMToken: Only a minter can mint.");
         _mint(to, amount);
     }
 }
