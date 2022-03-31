@@ -34,11 +34,13 @@ describe("QBM Token", function () {
         it("Should have the correct decimals", async function () {
             expect(await contract.decimals()).to.equal(18);
         });
+
         it("Should have set the correct roles", async function () {
             const AdminRole = await contract.DEFAULT_ADMIN_ROLE();
             expect(await contract.hasRole(AdminRole, deployer)).to.equal(true);
         });
     });
+
     describe("Minting", function () {
         it("Should mint tokens being minter", async function () {
             const amount = etherToWei("1");
@@ -64,7 +66,7 @@ describe("QBM Token", function () {
             const amount = etherToWei("1");
             const account = accounts[1].address;
             await contract.grantRole(contract.MINTER_ROLE(), account);
-            await contract.mint(account, amount);
+            await contract.connect(accounts[1]).mint(account, amount);
             expect(await contract.balanceOf(account)).to.equal(amount);
         });
     });
