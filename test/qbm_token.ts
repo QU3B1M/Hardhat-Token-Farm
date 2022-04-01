@@ -4,9 +4,9 @@ import { Contract } from "ethers";
 import { ethers, deployments, getNamedAccounts } from "hardhat";
 
 const etherToWei = (eth: string) => ethers.utils.parseUnits(eth);
+const ContractName = "QBMToken";
 
 describe("QBM Token", function () {
-	const ContractName = "QBMToken";
     let contract: Contract;
     let deployer: string;
 	let accounts: SignerWithAddress[];
