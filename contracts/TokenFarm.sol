@@ -55,6 +55,10 @@ contract TokenFarm is AccessControlEnumerable {
 	function stakeTokens(uint256 _amount, address _token) external {
 		require(_amount > 0, "TokenFarm: Amount must be greater than 0.");
 		require(tokenIsAllowed(_token), "TokenFarm: Token is not allowed.");
+		require(
+			IERC20(_token).allowance(msg.sender, address(this)) >= _amount,
+			 "TokenFarm: Contract does not have enough allowance for this token."
+		);	
 		IERC20(_token).transferFrom(msg.sender, address(this), _amount);
 		_updateUniqueTokensStaked(msg.sender, _token);
 		stakingBalance[_token][msg.sender] += _amount;

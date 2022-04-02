@@ -102,4 +102,54 @@ describe("Token Farm", function () {
                 .to.be.revertedWith("TokenFarm: Token is not allowed.");
         });
     });
+
+    describe("Staking", function () {
+        beforeEach(async () => {
+            await contract.addAllowedToken(testToken.address);
+            await contract.setPriceFeed(testToken.address, priceFeed.address);
+            await contract.setPriceFeed(qbmToken.address, priceFeed.address);
+            await testToken.mint(deployer, etherToWei("1"))
+            await qbmToken.mint(deployer, etherToWei("1"));
+        });
+
+        it("Should stake single token", async function () {
+            await testToken.approve(contract.address, etherToWei("1"));
+            // Stake the tokens.
+            await contract.stakeTokens(etherToWei("1"), testToken.address);
+            // Assert the tokens are staked.
+            expect(await testToken.balanceOf(contract.address)).to.equal(etherToWei("1"));
+            expect(await contract.getUserSingleTokenValue(deployer, testToken.address)).to.equal(2000);
+        });
+
+        it("Should stake multiple tokens", async function () {
+            await qbmToken.approve(contract.address, etherToWei("1"));
+            await testToken.approve(contract.address, etherToWei("1"));
+            // Stake the tokens.
+            await contract.stakeTokens(etherToWei("1"), testToken.address);
+            await contract.stakeTokens(etherToWei("1"), qbmToken.address);
+            // Assert the tokens are staked.
+            expect(await testToken.balanceOf(contract.address)).to.equal(etherToWei("1"));
+            expect(await qbmToken.balanceOf(contract.address)).to.equal(etherToWei("2")); // Because the contract already has some of this tokens
+            expect(await contract.getUserTotalValue(deployer)).to.equal(4000);
+            expect(await contract.getUserSingleTokenValue(deployer, testToken.address)).to.equal(2000);
+            expect(await contract.getUserSingleTokenValue(deployer, qbmToken.address)).to.equal(2000);
+        });
+
+        it("Should not stake non-allowed token", async function () {
+            await contract.removeAllowedToken(testToken.address);
+            await expect(contract.stakeTokens(etherToWei("1"), testToken.address))
+                .to.be.revertedWith("TokenFarm: Token is not allowed.");
+        });
+
+        it("Should not stake tokens if the amount is 0", async function () {
+            await testToken.approve(contract.address, etherToWei("1"));
+            await expect(contract.stakeTokens(etherToWei("0"), testToken.address))
+                .to.be.revertedWith("TokenFarm: Amount must be greater than 0.");
+        });
+
+        it("Should not stake tokens without enough allowance", async function () {
+            await expect(contract.stakeTokens(etherToWei("1"), testToken.address))
+                .to.be.revertedWith("TokenFarm: Contract does not have enough allowance for this token.");
+        });
+    });
 });
