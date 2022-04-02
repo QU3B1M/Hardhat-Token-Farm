@@ -27,8 +27,9 @@ contract TokenFarm is AccessControlEnumerable {
         _;
     }
 
-	function setPriceFeed(address _tokenPriceFeed) external onlyAdmin {
-		tokenPriceFeed[_tokenPriceFeed] = _tokenPriceFeed;
+	function setPriceFeed(address _token, address _tokenPriceFeed) external onlyAdmin {
+		require(tokenIsAllowed(_token), "TokenFarm: Token is not allowed.");
+		tokenPriceFeed[_token] = _tokenPriceFeed;
 	}
 
 	function issueTokens() external onlyAdmin {
