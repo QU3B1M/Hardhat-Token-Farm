@@ -151,5 +151,14 @@ describe("Token Farm", function () {
             await expect(contract.stakeTokens(etherToWei("1"), testToken.address))
                 .to.be.revertedWith("TokenFarm: Contract does not have enough allowance for this token.");
         });
+
+        it("Should unstake token", async function () {
+            await testToken.approve(contract.address, etherToWei("1"));
+            await contract.stakeTokens(etherToWei("1"), testToken.address);
+            // Unstake the tokens.
+            await contract.unstakeTokens(testToken.address);
+            // Assert tokens are unstaked
+            expect(await testToken.balanceOf(contract.address)).to.equal(0);
+            expect(await contract.getUserSingleTokenValue(deployer, testToken.address)).to.equal(0);
     });
 });
