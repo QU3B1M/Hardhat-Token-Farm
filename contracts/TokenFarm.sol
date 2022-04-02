@@ -47,7 +47,7 @@ contract TokenFarm is AccessControlEnumerable {
 	function issueTokens() external onlyAdmin {
 		for (uint256 i = 0; i < stakers.length; i++) {
 			address staker = stakers[i];
-			uint256 staked = uniqueTokensStaked[staker];
+            uint256 staked = getUserTotalValue(staker);
 			qbmToken.transfer(staker, staked);
 		}
 	}
@@ -79,7 +79,7 @@ contract TokenFarm is AccessControlEnumerable {
 		stakingBalance[_token][msg.sender] = 0;
 	}
 
-	function getUserTotalValue(address _staker) external view returns (uint256) {
+	function getUserTotalValue(address _staker) public view returns (uint256) {
 		require(uniqueTokensStaked[_staker] > 0, "TokenFarm: User has no tokens staked.");
 		uint256 total = 0;
 		for (uint256 i = 0; i < allowedTokens.length; i++) {

@@ -108,7 +108,7 @@ describe("Token Farm", function () {
             await contract.addAllowedToken(testToken.address);
             await contract.setPriceFeed(testToken.address, priceFeed.address);
             await contract.setPriceFeed(qbmToken.address, priceFeed.address);
-            await testToken.mint(deployer, etherToWei("1"))
+            await testToken.mint(deployer, etherToWei("1"));
             await qbmToken.mint(deployer, etherToWei("1"));
         });
 
@@ -160,5 +160,47 @@ describe("Token Farm", function () {
             // Assert tokens are unstaked
             expect(await testToken.balanceOf(contract.address)).to.equal(0);
             expect(await contract.getUserSingleTokenValue(deployer, testToken.address)).to.equal(0);
+        });
+
+        it("Should not unstake non-allowed token", async function () {
+            await testToken.approve(contract.address, etherToWei("1"));
+            await contract.stakeTokens(etherToWei("1"), testToken.address);
+            await contract.removeAllowedToken(testToken.address);
+            await expect(contract.unstakeTokens(testToken.address))
+                .to.be.revertedWith("TokenFarm: Token is not allowed.");
+        });
+
+        it("Should not unstake tokens if user has no staked tokens", async function () {
+            await expect(contract.unstakeTokens(testToken.address))
+                .to.be.revertedWith("TokenFarm: User has no tokens staked.");
+        });
+    });
+    
+    describe("Issue tokens", function () {
+        beforeEach(async () => {
+            await contract.addAllowedToken(testToken.address);
+            await contract.setPriceFeed(testToken.address, priceFeed.address);
+            await contract.setPriceFeed(qbmToken.address, priceFeed.address);
+            // Mint and Allow.
+            await testToken.mint(deployer, etherToWei("1"))
+            await testToken.mint(accounts[1].address, etherToWei("1"))
+            await testToken.approve(contract.address, etherToWei("1"));
+            await testToken.connect(accounts[1]).approve(contract.address, etherToWei("1"));
+        });
+
+       it("Should issue tokens to all the stakers", async function () {
+            await contract.stakeTokens(etherToWei("1"), testToken.address);
+            await contract.connect(accounts[1]).stakeTokens(etherToWei("1"), testToken.address);
+            // Issue tokens and assert that the tokens are issued.
+            await contract.issueTokens();
+            expect(await qbmToken.balanceOf(deployer)).to.equal(2000);
+            expect(await qbmToken.balanceOf(accounts[1].address)).to.equal(2000);
+        });
+
+        it("Should not issue tokens if the user has no staked tokens", async function () {
+            await contract.issueTokens();
+            expect(await qbmToken.balanceOf(deployer)).to.equal(0);
+            expect(await qbmToken.balanceOf(accounts[1].address)).to.equal(0);
+        });
     });
 });
