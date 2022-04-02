@@ -8,7 +8,7 @@ Yield farming project developed using **Hardhat** _(TypeScript)_ and **Solidity*
 ## Quickstart
 
 Clone the repo and install the dependencies:
-- `git clone https://github.com/QU3B1M/Hardhat-Token-Farm.git`
+- `git clone https://github.com/QU3B1M/hardhat-token-farm.git`
 - `cd Hardhat-Token-Farm`
 - `npm install`
 
