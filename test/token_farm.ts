@@ -76,7 +76,6 @@ describe("Token Farm", function () {
     });
 
     describe("Token Price feed", function () {
-
         it("Should get the correct token value", async function () {
             await contract.addAllowedToken(testToken.address);
             // Set the price feed and get the token value.

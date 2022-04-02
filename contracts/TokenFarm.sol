@@ -19,17 +19,29 @@ contract TokenFarm is AccessControlEnumerable {
 		allowedTokens.push(_qbmToken);
 	}
 
-    modifier onlyAdmin() {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, msg.sender), 
-            "TokenFarm: Only admins can call this function."
-        );
-        _;
-    }
+	modifier onlyAdmin() {
+		require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "TokenFarm: Only admins can call this function.");
+		_;
+	}
+
+	function addAllowedToken(address _token) external onlyAdmin {
+		require(!tokenIsAllowed(_token), "TokenFarm: Token is already allowed.");
+		allowedTokens.push(_token);
+	}
 
 	function setPriceFeed(address _token, address _tokenPriceFeed) external onlyAdmin {
 		require(tokenIsAllowed(_token), "TokenFarm: Token is not allowed.");
 		tokenPriceFeed[_token] = _tokenPriceFeed;
+	}
+
+	function removeAllowedToken(address _token) external onlyAdmin {
+		require(tokenIsAllowed(_token), "TokenFarm: Token is not allowed.");
+		for (uint256 i = 0; i < allowedTokens.length; i++) {
+			if (allowedTokens[i] == _token) {
+				delete allowedTokens[i];
+				break;
+			}
+		}
 	}
 
 	function issueTokens() external onlyAdmin {
@@ -51,10 +63,16 @@ contract TokenFarm is AccessControlEnumerable {
 		}
 	}
 
-	function _updateUniqueTokensStaked(address _staker, address _token) internal {
-		if (stakingBalance[_token][_staker] == 0) {
-			uniqueTokensStaked[_staker]++;
+	function unstakeTokens(address _token) external {
+		uint256 balance = stakingBalance[_token][msg.sender];
+		require(tokenIsAllowed(_token), "TokenFarm: Token is not allowed.");
+		require(uniqueTokensStaked[msg.sender] > 0, "TokenFarm: User has no tokens staked.");
+		IERC20(_token).transfer(msg.sender, balance);
+		if (uniqueTokensStaked[msg.sender] == 1) {
+			_removeStaker(msg.sender);
 		}
+		uniqueTokensStaked[msg.sender]--;
+		stakingBalance[_token][msg.sender] = 0;
 	}
 
 	function getUserTotalValue(address _staker) external view returns (uint256) {
@@ -83,31 +101,19 @@ contract TokenFarm is AccessControlEnumerable {
 		return (uint256(price), decimals);
 	}
 
-	function addAllowedToken(address _token) external onlyAdmin {
-		require(!tokenIsAllowed(_token), "TokenFarm: Token is already allowed.");
-		allowedTokens.push(_token);
+	function tokenIsAllowed(address _token) public view returns (bool) {
+		for (uint256 i = 0; i < allowedTokens.length; i++) {
+			if (allowedTokens[i] == _token) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-    function removeAllowedToken(address _token) external onlyAdmin {
-        require(tokenIsAllowed(_token), "TokenFarm: Token is not allowed.");
-        for (uint256 i = 0; i < allowedTokens.length; i++) {
-            if (allowedTokens[i] == _token) {
-                delete allowedTokens[i];
-                break;
-            }
-        }
-    }
-
-	function unstakeTokens(address _token) external {
-		uint256 balance = stakingBalance[_token][msg.sender];
-		require(tokenIsAllowed(_token), "TokenFarm: Token is not allowed.");
-		require(uniqueTokensStaked[msg.sender] > 0, "TokenFarm: User has no tokens staked.");
-		IERC20(_token).transfer(msg.sender, balance);
-		if (uniqueTokensStaked[msg.sender] == 1) {
-			_removeStaker(msg.sender);
+	function _updateUniqueTokensStaked(address _staker, address _token) internal {
+		if (stakingBalance[_token][_staker] == 0) {
+			uniqueTokensStaked[_staker]++;
 		}
-		uniqueTokensStaked[msg.sender]--;
-		stakingBalance[_token][msg.sender] = 0;
 	}
 
 	function _removeStaker(address _staker) internal {
@@ -117,14 +123,5 @@ contract TokenFarm is AccessControlEnumerable {
 				break;
 			}
 		}
-	}
-
-	function tokenIsAllowed(address _token) public view returns (bool) {
-		for (uint256 i = 0; i < allowedTokens.length; i++) {
-			if (allowedTokens[i] == _token) {
-				return true;
-			}
-		}
-		return false;
 	}
 }
